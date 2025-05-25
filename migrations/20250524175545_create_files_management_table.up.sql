@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS expressions (
+    id TEXT NOT NULL,
+    text TEXT NOT NULL UNIQUE,
+    result TEXT NOT NULL
+);

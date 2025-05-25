@@ -67,7 +67,7 @@ func (x *BertRequest) GetText() string {
 
 type BertResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Result        string                 `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,9 +102,9 @@ func (*BertResponse) Descriptor() ([]byte, []int) {
 	return file_proto_model_model_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *BertResponse) GetId() string {
+func (x *BertResponse) GetResult() string {
 	if x != nil {
-		return x.Id
+		return x.Result
 	}
 	return ""
 }
@@ -115,9 +115,9 @@ const file_proto_model_model_proto_rawDesc = "" +
 	"\n" +
 	"\x17proto/model/model.proto\x12\x05model\"!\n" +
 	"\vBertRequest\x12\x12\n" +
-	"\x04text\x18\x01 \x01(\tR\x04text\"\x1e\n" +
-	"\fBertResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2A\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\"&\n" +
+	"\fBertResponse\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\tR\x06result2A\n" +
 	"\vBertService\x122\n" +
 	"\aPredict\x12\x12.model.BertRequest\x1a\x13.model.BertResponseB\x0fZ\r./proto/modelb\x06proto3"
 

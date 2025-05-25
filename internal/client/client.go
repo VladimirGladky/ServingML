@@ -1,0 +1,54 @@
+package client
+
+import (
+	"ServingML/gen/proto/model"
+	"ServingML/pkg/logger"
+	"context"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"sync"
+	"time"
+)
+
+type Client struct {
+	ctx  context.Context
+	conn *grpc.ClientConn
+}
+
+func New(ctx context.Context) *Client {
+	return &Client{
+		ctx: ctx,
+	}
+}
+
+func (c *Client) Run(wg *sync.WaitGroup) error {
+	defer wg.Done()
+	var err error
+	c.conn, err = grpc.NewClient("localhost:6060", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+	client := model.NewBertServiceClient(c.conn)
+	texts := []string{
+		"What a great day!",
+		"What a bad day!",
+		"What a simple day!",
+	}
+
+	for i := 0; i < 10; i++ {
+		text := texts[i%len(texts)]
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		start := time.Now()
+		resp, err := client.Predict(ctx, &model.BertRequest{Text: text})
+		elapsed := time.Since(start)
+		if err != nil {
+			logger.GetLoggerFromCtx(c.ctx).Error("error calling Predict: %v", zap.Error(err))
+			return err
+		}
+		logger.GetLoggerFromCtx(c.ctx).Info("response", zap.String("result", resp.Result), zap.Duration("elapsed", elapsed))
+	}
+	return nil
+}

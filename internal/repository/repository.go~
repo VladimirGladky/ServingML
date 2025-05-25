@@ -8,7 +8,6 @@ import (
 
 type MLRepositoryInterface interface {
 	SaveExpr(ctx context.Context, id, text string) error
-	GetResult(ctx context.Context, id string) (string, error)
 }
 
 type MLRepository struct {

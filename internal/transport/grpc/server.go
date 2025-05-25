@@ -21,9 +21,17 @@ func Register(s *grpc.Server, mlService service.MLServiceInterface) {
 }
 
 func (s *MLServer) Predict(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
-	id , err := s.mlService.Predict(ctx, req.Text)
+	id, err := s.mlService.Predict(ctx, req.Text)
 	if err != nil {
 		return nil, err
 	}
-	return &model.BertResponse{Id: id}, nil
+	return &model.BertResponse{Result: id}, nil
 }
+
+//func (s *MLServer) GetResult(ctx context.Context, req *model.GetResultRequest) (*model.GetResultResponse, error) {
+//	result, err := s.mlService.GetResult(ctx, req.Id)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return &model.GetResultResponse{Result: result}, nil
+//}
