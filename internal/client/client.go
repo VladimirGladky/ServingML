@@ -24,11 +24,18 @@ func New(ctx context.Context) *Client {
 
 func (c *Client) Run(wg *sync.WaitGroup) error {
 	defer wg.Done()
+
 	var err error
-	c.conn, err = grpc.NewClient("localhost:6060", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	c.conn, err = grpc.NewClient(
+		"localhost:6060",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
+		logger.GetLoggerFromCtx(c.ctx).Error("connection failed", zap.Error(err))
 		return err
 	}
+	defer c.conn.Close()
+
 	client := model.NewBertServiceClient(c.conn)
 	texts := []string{
 		"What a great day!",
@@ -36,19 +43,19 @@ func (c *Client) Run(wg *sync.WaitGroup) error {
 		"What a simple day!",
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		text := texts[i%len(texts)]
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+		reqCtx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
 		defer cancel()
 
-		start := time.Now()
-		resp, err := client.Predict(ctx, &model.BertRequest{Text: text})
-		elapsed := time.Since(start)
+		_, err := client.Predict(reqCtx, &model.BertRequest{Text: text})
 		if err != nil {
-			logger.GetLoggerFromCtx(c.ctx).Error("error calling Predict: %v", zap.Error(err))
-			return err
+			logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
+				zap.String("text", text),
+				zap.Error(err))
+			continue
 		}
-		logger.GetLoggerFromCtx(c.ctx).Info("response", zap.String("result", resp.Result), zap.Duration("elapsed", elapsed))
 	}
 	return nil
 }

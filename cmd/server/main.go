@@ -10,12 +10,12 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx, _ = logger.New(ctx)
 	defer cancel()
 	cfg, err := config.New()
 	if err != nil {
 		logger.GetLoggerFromCtx(ctx).Fatal("error loading config", zap.Error(err))
 	}
-	ctx, _ = logger.New(ctx)
 
 	application := app.New(cfg, ctx)
 	application.MustRun()

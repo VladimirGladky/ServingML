@@ -3,14 +3,16 @@ package app
 import (
 	grpcapp2 "ServingML/internal/app/grpc"
 	"ServingML/internal/config"
+	"ServingML/internal/modelWrapper"
 	service2 "ServingML/internal/service"
 	"ServingML/pkg/logger"
 	"context"
-	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"go.uber.org/zap"
 )
 
 type App struct {
@@ -19,6 +21,7 @@ type App struct {
 	gRPCServer *grpcapp2.App
 	wg         sync.WaitGroup
 	cancel     context.CancelFunc
+	service    *service2.MLService
 }
 
 func New(cfg *config.Config, ctx context.Context) *App {
@@ -27,12 +30,17 @@ func New(cfg *config.Config, ctx context.Context) *App {
 	//	panic(err)
 	//}
 	//repo := repository.New(db, ctx)
-	service := service2.New(ctx)
+	model, err := modelWrapper.NewWrapperModel()
+	if err != nil {
+		panic(err)
+	}
+	service := service2.New(ctx, model)
 	gRPCapp := grpcapp2.New(cfg, service, ctx)
 	return &App{
 		cfg:        cfg,
 		ctx:        ctx,
 		gRPCServer: gRPCapp,
+		service:    service,
 	}
 }
 
@@ -52,6 +60,12 @@ func (a *App) Run() error {
 			errCh <- err
 			a.cancel()
 		}
+	}()
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+		logger.GetLoggerFromCtx(a.ctx).Info("starting batchProcessor")
+		a.service.StartBatchProcessor()
 	}()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

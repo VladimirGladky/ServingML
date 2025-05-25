@@ -1,0 +1,3 @@
+data/rubert-tiny2-russian-sentiment-onnx/model.onnx
+*.onnx
+internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx

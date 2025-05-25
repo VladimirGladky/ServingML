@@ -9,14 +9,14 @@ import (
 
 type MLServer struct {
 	model.UnimplementedBertServiceServer
-	mlService service.MLServiceInterface
+	mlService *service.MLService
 }
 
-func NewMLServer(mlService service.MLServiceInterface) *MLServer {
+func NewMLServer(mlService *service.MLService) *MLServer {
 	return &MLServer{mlService: mlService}
 }
 
-func Register(s *grpc.Server, mlService service.MLServiceInterface) {
+func Register(s *grpc.Server, mlService *service.MLService) {
 	model.RegisterBertServiceServer(s, NewMLServer(mlService))
 }
 
@@ -27,11 +27,3 @@ func (s *MLServer) Predict(ctx context.Context, req *model.BertRequest) (*model.
 	}
 	return &model.BertResponse{Result: id}, nil
 }
-
-//func (s *MLServer) GetResult(ctx context.Context, req *model.GetResultRequest) (*model.GetResultResponse, error) {
-//	result, err := s.mlService.GetResult(ctx, req.Id)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &model.GetResultResponse{Result: result}, nil
-//}

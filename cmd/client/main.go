@@ -4,9 +4,10 @@ import (
 	"ServingML/internal/client"
 	"ServingML/pkg/logger"
 	"context"
-	"go.uber.org/zap"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -14,15 +15,17 @@ func main() {
 	ctx, _ = logger.New(ctx)
 	var wg sync.WaitGroup
 	start := time.Now()
-
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
 			client := client.New(ctx)
-			client.Run(&wg)
+			err := client.Run(&wg)
+			if err != nil {
+				logger.GetLoggerFromCtx(ctx).Fatal("error:", zap.Error(err))
+			}
 		}()
 	}
 	wg.Wait()
 	elapsed := time.Since(start)
-	logger.GetLoggerFromCtx(context.Background()).Info("elapsed", zap.Duration("elapsed", elapsed))
+	logger.GetLoggerFromCtx(ctx).Info("elapsed", zap.Duration("elapsed", elapsed))
 }

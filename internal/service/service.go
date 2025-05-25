@@ -7,14 +7,15 @@ import (
 	"ServingML/pkg/modelUtils"
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/daulet/tokenizers"
 	ort "github.com/yalue/onnxruntime_go"
-	"time"
 )
 
 type MLServiceInterface interface {
 	Predict(ctx context.Context, text string) (string, error)
-	startBatchProcessor()
+	StartBatchProcessor()
 	processBatch(batch []*models.PredictionRequest)
 }
 
@@ -25,8 +26,12 @@ type MLService struct {
 	model      *modelWrapper.WrapperModel
 }
 
-func New(ctx context.Context) *MLService {
-	return &MLService{ctx: ctx}
+func New(ctx context.Context, model *modelWrapper.WrapperModel) *MLService {
+	return &MLService{
+		ctx:   ctx,
+		queue: make(chan *models.PredictionRequest, 1000),
+		model: model,
+	}
 }
 
 func (s *MLService) Predict(ctx context.Context, text string) (string, error) {
@@ -54,25 +59,25 @@ func (s *MLService) Predict(ctx context.Context, text string) (string, error) {
 	}
 }
 
-func (s *MLService) startBatchProcessor() {
+func (s *MLService) StartBatchProcessor() {
 	var batch []*models.PredictionRequest
-	timer := time.NewTimer(100 * time.Millisecond)
+	timer := time.NewTimer(50 * time.Millisecond)
 
 	for {
 		select {
 		case req := <-s.queue:
 			batch = append(batch, req)
-			if len(batch) >= 32 {
+			if len(batch) >= 2 {
 				s.processBatch(batch)
 				batch = nil
-				timer.Reset(100 * time.Millisecond)
+				timer.Reset(50 * time.Millisecond)
 			}
 		case <-timer.C:
 			if len(batch) > 0 {
 				s.processBatch(batch)
 				batch = nil
 			}
-			timer.Reset(100 * time.Millisecond)
+			timer.Reset(50 * time.Millisecond)
 		}
 	}
 }
