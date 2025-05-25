@@ -20,26 +20,29 @@ type MLServiceInterface interface {
 }
 
 type MLService struct {
-	repository repository.MLRepositoryInterface
-	ctx        context.Context
-	queue      chan *models.PredictionRequest
-	model      *modelWrapper.WrapperModel
+	repository     repository.MLRepositoryInterface
+	ctx            context.Context
+	queue          chan *models.PredictionRequest
+	sentimentModel *modelWrapper.WrapperModel
+	emotionModel   *modelWrapper.WrapperModel
 }
 
-func New(ctx context.Context, model *modelWrapper.WrapperModel) *MLService {
+func New(ctx context.Context, sentimentModel *modelWrapper.WrapperModel, emotionModel *modelWrapper.WrapperModel) *MLService {
 	return &MLService{
-		ctx:   ctx,
-		queue: make(chan *models.PredictionRequest, 1000),
-		model: model,
+		ctx:            ctx,
+		queue:          make(chan *models.PredictionRequest, 2000),
+		sentimentModel: sentimentModel,
+		emotionModel:   emotionModel,
 	}
 }
 
-func (s *MLService) Predict(ctx context.Context, text string) (string, error) {
+func (s *MLService) PredictSentiment(ctx context.Context, text string) (string, error) {
 	respCh := make(chan *models.PredictionResponse, 1)
 	select {
 	case s.queue <- &models.PredictionRequest{
-		Text:       text,
-		ResponseCh: respCh,
+		Text:           text,
+		ResponseCh:     respCh,
+		PredictionType: models.SentimentPrediction,
 	}:
 	case <-ctx.Done():
 		return "", ctx.Err()
@@ -50,43 +53,74 @@ func (s *MLService) Predict(ctx context.Context, text string) (string, error) {
 		if resp.Error != nil {
 			return "", resp.Error
 		}
-		if resp.Probabilities[0] > resp.Probabilities[1] && resp.Probabilities[0] > resp.Probabilities[2] {
-			return "neutral", nil
-		} else if resp.Probabilities[1] > resp.Probabilities[0] && resp.Probabilities[1] > resp.Probabilities[2] {
-			return "positive", nil
+		return convertSentiment(resp.Probabilities), nil
+	}
+}
+
+func (s *MLService) PredictEmotion(ctx context.Context, text string) (string, error) {
+	respCh := make(chan *models.PredictionResponse, 1)
+	select {
+	case s.queue <- &models.PredictionRequest{
+		Text:           text,
+		ResponseCh:     respCh,
+		PredictionType: models.EmotionPrediction,
+	}:
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
+
+	select {
+	case resp := <-respCh:
+		if resp.Error != nil {
+			return "", resp.Error
 		}
-		return "negative", nil
+		return convertEmotion(resp.Probabilities), nil
 	}
 }
 
 func (s *MLService) StartBatchProcessor() {
-	var batch []*models.PredictionRequest
+	sentimentBatch := make([]*models.PredictionRequest, 0)
+	emotionBatch := make([]*models.PredictionRequest, 0)
 	timer := time.NewTimer(50 * time.Millisecond)
 
 	for {
 		select {
 		case req := <-s.queue:
-			batch = append(batch, req)
-			if len(batch) >= 2 {
-				s.processBatch(batch)
-				batch = nil
-				timer.Reset(50 * time.Millisecond)
+			switch req.PredictionType {
+			case models.SentimentPrediction:
+				sentimentBatch = append(sentimentBatch, req)
+				if len(sentimentBatch) >= 2 {
+					s.processBatch(sentimentBatch, s.sentimentModel)
+					sentimentBatch = nil
+				}
+			case models.EmotionPrediction:
+				emotionBatch = append(emotionBatch, req)
+				if len(emotionBatch) >= 2 {
+					s.processBatch(emotionBatch, s.emotionModel)
+					emotionBatch = nil
+				}
 			}
+			timer.Reset(50 * time.Millisecond)
+
 		case <-timer.C:
-			if len(batch) > 0 {
-				s.processBatch(batch)
-				batch = nil
+			if len(sentimentBatch) > 0 {
+				s.processBatch(sentimentBatch, s.sentimentModel)
+				sentimentBatch = nil
+			}
+			if len(emotionBatch) > 0 {
+				s.processBatch(emotionBatch, s.emotionModel)
+				emotionBatch = nil
 			}
 			timer.Reset(50 * time.Millisecond)
 		}
 	}
 }
 
-func (s *MLService) processBatch(batch []*models.PredictionRequest) {
+func (s *MLService) processBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel) {
 	var allIDs, allTypeIDs, allAttentionMasks [][]uint32
 
 	for _, req := range batch {
-		encoding := s.model.Tokenizer.EncodeWithOptions(
+		encoding := model.Tokenizer.EncodeWithOptions(
 			req.Text,
 			true,
 			tokenizers.WithReturnTypeIDs(),
@@ -116,9 +150,9 @@ func (s *MLService) processBatch(batch []*models.PredictionRequest) {
 	}
 	defer outputTensor.Destroy()
 
-	s.model.ModelMutex.Lock()
-	err = s.model.Session.Run(inputTensors, []ort.Value{outputTensor})
-	s.model.ModelMutex.Unlock()
+	s.sentimentModel.ModelMutex.Lock()
+	err = s.sentimentModel.Session.Run(inputTensors, []ort.Value{outputTensor})
+	s.sentimentModel.ModelMutex.Unlock()
 
 	if err != nil {
 		sendErrorToBatch(batch, err)
@@ -143,4 +177,59 @@ func sendErrorToBatch(batch []*models.PredictionRequest, err error) {
 		req.ResponseCh <- &models.PredictionResponse{Error: err}
 		close(req.ResponseCh)
 	}
+}
+
+func convertSentiment(probabilities []float64) string {
+	if probabilities[0] > probabilities[1] && probabilities[0] > probabilities[2] {
+		return "neutral"
+	} else if probabilities[1] > probabilities[0] && probabilities[1] > probabilities[2] {
+		return "positive"
+	}
+	return "negative"
+}
+
+func convertEmotion(probabilities []float64) string {
+	emotions := []string{
+		"восхищение",      // admiration
+		"веселье",         // amusement
+		"злость",          // anger
+		"раздражение",     // annoyance
+		"одобрение",       // approval
+		"забота",          // caring
+		"непонимание",     // confusion
+		"любопытство",     // curiosity
+		"желание",         // desire
+		"разочарование",   // disappointment
+		"неодобрение",     // disapproval
+		"отвращение",      // disgust
+		"смущение",        // embarrassment
+		"возбуждение",     // excitement
+		"страх",           // fear
+		"признательность", // gratitude
+		"горе",            // grief
+		"радость",         // joy
+		"любовь",          // love
+		"нервозность",     // nervousness
+		"оптимизм",        // optimism
+		"гордость",        // pride
+		"осознание",       // realization
+		"облегчение",      // relief
+		"раскаяние",       // remorse
+		"грусть",          // sadness
+		"удивление",       // surprise
+		"нейтральность",   // neutral
+	}
+
+	if len(probabilities) != len(emotions) {
+		return "неизвестно"
+	}
+
+	maxIndex := 0
+	for i, p := range probabilities {
+		if p > probabilities[maxIndex] {
+			maxIndex = i
+		}
+	}
+
+	return emotions[maxIndex]
 }

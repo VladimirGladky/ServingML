@@ -16,7 +16,6 @@ func main() {
 	if err != nil {
 		logger.GetLoggerFromCtx(ctx).Fatal("error loading config", zap.Error(err))
 	}
-
 	application := app.New(cfg, ctx)
 	application.MustRun()
 }

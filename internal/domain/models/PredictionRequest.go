@@ -1,6 +1,14 @@
 package models
 
+type PredictionType int
+
+const (
+	SentimentPrediction PredictionType = iota
+	EmotionPrediction
+)
+
 type PredictionRequest struct {
-	Text       string
+	Text string
+	PredictionType
 	ResponseCh chan *PredictionResponse
 }

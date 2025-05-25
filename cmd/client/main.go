@@ -19,7 +19,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			client := client.New(ctx)
-			err := client.Run(&wg)
+			err := client.Run(&wg, "sentiment")
 			if err != nil {
 				logger.GetLoggerFromCtx(ctx).Fatal("error:", zap.Error(err))
 			}
@@ -27,5 +27,20 @@ func main() {
 	}
 	wg.Wait()
 	elapsed := time.Since(start)
-	logger.GetLoggerFromCtx(ctx).Info("elapsed", zap.Duration("elapsed", elapsed))
+	logger.GetLoggerFromCtx(ctx).Info("elapsed sentiment", zap.Duration("elapsed", elapsed))
+
+	start = time.Now()
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			client := client.New(ctx)
+			err := client.Run(&wg, "emotion")
+			if err != nil {
+				logger.GetLoggerFromCtx(ctx).Fatal("error:", zap.Error(err))
+			}
+		}()
+	}
+	wg.Wait()
+	elapsed = time.Since(start)
+	logger.GetLoggerFromCtx(ctx).Info("elapsed emotion", zap.Duration("elapsed", elapsed))
 }

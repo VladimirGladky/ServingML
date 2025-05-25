@@ -117,9 +117,10 @@ const file_proto_model_model_proto_rawDesc = "" +
 	"\vBertRequest\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\"&\n" +
 	"\fBertResponse\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\tR\x06result2A\n" +
-	"\vBertService\x122\n" +
-	"\aPredict\x12\x12.model.BertRequest\x1a\x13.model.BertResponseB\x0fZ\r./proto/modelb\x06proto3"
+	"\x06result\x18\x01 \x01(\tR\x06result2\x85\x01\n" +
+	"\vBertService\x12;\n" +
+	"\x10PredictSentiment\x12\x12.model.BertRequest\x1a\x13.model.BertResponse\x129\n" +
+	"\x0ePredictEmotion\x12\x12.model.BertRequest\x1a\x13.model.BertResponseB\x0fZ\r./proto/modelb\x06proto3"
 
 var (
 	file_proto_model_model_proto_rawDescOnce sync.Once
@@ -139,10 +140,12 @@ var file_proto_model_model_proto_goTypes = []any{
 	(*BertResponse)(nil), // 1: model.BertResponse
 }
 var file_proto_model_model_proto_depIdxs = []int32{
-	0, // 0: model.BertService.Predict:input_type -> model.BertRequest
-	1, // 1: model.BertService.Predict:output_type -> model.BertResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 0: model.BertService.PredictSentiment:input_type -> model.BertRequest
+	0, // 1: model.BertService.PredictEmotion:input_type -> model.BertRequest
+	1, // 2: model.BertService.PredictSentiment:output_type -> model.BertResponse
+	1, // 3: model.BertService.PredictEmotion:output_type -> model.BertResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

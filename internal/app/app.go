@@ -30,11 +30,15 @@ func New(cfg *config.Config, ctx context.Context) *App {
 	//	panic(err)
 	//}
 	//repo := repository.New(db, ctx)
-	model, err := modelWrapper.NewWrapperModel()
+	sentimentModel, err := modelWrapper.NewWrapperModel("/home/smooth/Рабочий стол/TestProject/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json", "/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx")
 	if err != nil {
 		panic(err)
 	}
-	service := service2.New(ctx, model)
+	emotionModel, err := modelWrapper.NewWrapperModel("", "")
+	if err != nil {
+		panic(err)
+	}
+	service := service2.New(ctx, sentimentModel, emotionModel)
 	gRPCapp := grpcapp2.New(cfg, service, ctx)
 	return &App{
 		cfg:        cfg,

@@ -22,7 +22,7 @@ func New(ctx context.Context) *Client {
 	}
 }
 
-func (c *Client) Run(wg *sync.WaitGroup) error {
+func (c *Client) Run(wg *sync.WaitGroup, typeModel string) error {
 	defer wg.Done()
 
 	var err error
@@ -40,7 +40,7 @@ func (c *Client) Run(wg *sync.WaitGroup) error {
 	texts := []string{
 		"What a great day!",
 		"What a bad day!",
-		"What a simple day!",
+		"What a simple day",
 	}
 
 	for i := 0; i < 100; i++ {
@@ -48,13 +48,27 @@ func (c *Client) Run(wg *sync.WaitGroup) error {
 
 		reqCtx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
 		defer cancel()
-
-		_, err := client.Predict(reqCtx, &model.BertRequest{Text: text})
-		if err != nil {
-			logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
-				zap.String("text", text),
-				zap.Error(err))
-			continue
+		if typeModel == "sentiment" {
+			_, err := client.PredictSentiment(reqCtx, &model.BertRequest{Text: text})
+			if err != nil {
+				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
+					zap.String("text", text),
+					zap.Error(err))
+				continue
+			}
+		}
+		if typeModel == "emotion" {
+			resp, err := client.PredictEmotion(reqCtx, &model.BertRequest{Text: text})
+			if err != nil {
+				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
+					zap.String("text", text),
+					zap.Error(err))
+				continue
+			}
+			if i == 0 || i == 1 || i == 2 {
+				logger.GetLoggerFromCtx(c.ctx).Info("predict result",
+					zap.String("result", resp.Result))
+			}
 		}
 	}
 	return nil

@@ -2,9 +2,10 @@ package modelWrapper
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/daulet/tokenizers"
 	ort "github.com/yalue/onnxruntime_go"
-	"sync"
 )
 
 type WrapperModel struct {
@@ -15,18 +16,18 @@ type WrapperModel struct {
 	ModelMutex sync.Mutex
 }
 
-func NewWrapperModel() (*WrapperModel, error) {
-	tk, err := tokenizers.FromFile("./tokenizer.json")
+func NewWrapperModel(tokenizerPath string, modelPath string) (*WrapperModel, error) {
+	tk, err := tokenizers.FromFile(tokenizerPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load tokenizer: %v", err)
 	}
-	ort.SetSharedLibraryPath("onnxLibraryPath")
+	ort.SetSharedLibraryPath("/usr/lib/libonnxruntime.so")
 	if err := ort.InitializeEnvironment(); err != nil {
 		return nil, fmt.Errorf("failed to initialize ONNX Runtime: %v", err)
 	}
 
 	session, err := ort.NewDynamicAdvancedSession(
-		"modelPath",
+		modelPath,
 		[]string{"input_ids", "token_type_ids", "attention_mask"},
 		[]string{"logits"},
 		nil,
