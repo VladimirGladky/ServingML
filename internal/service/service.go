@@ -13,6 +13,11 @@ import (
 	ort "github.com/yalue/onnxruntime_go"
 )
 
+const (
+	SentimentOutputSize = 3
+	EmotionOutputSize   = 28
+)
+
 type MLServiceInterface interface {
 	Predict(ctx context.Context, text string) (string, error)
 	StartBatchProcessor()
@@ -89,14 +94,14 @@ func (s *MLService) StartBatchProcessor() {
 			switch req.PredictionType {
 			case models.SentimentPrediction:
 				sentimentBatch = append(sentimentBatch, req)
-				if len(sentimentBatch) >= 2 {
-					s.processBatch(sentimentBatch, s.sentimentModel)
+				if len(sentimentBatch) >= 512 {
+					s.processBatch(sentimentBatch, s.sentimentModel, "sentiment")
 					sentimentBatch = nil
 				}
 			case models.EmotionPrediction:
 				emotionBatch = append(emotionBatch, req)
-				if len(emotionBatch) >= 2 {
-					s.processBatch(emotionBatch, s.emotionModel)
+				if len(emotionBatch) >= 512 {
+					s.processBatch(emotionBatch, s.emotionModel, "emotion")
 					emotionBatch = nil
 				}
 			}
@@ -104,11 +109,11 @@ func (s *MLService) StartBatchProcessor() {
 
 		case <-timer.C:
 			if len(sentimentBatch) > 0 {
-				s.processBatch(sentimentBatch, s.sentimentModel)
+				s.processBatch(sentimentBatch, s.sentimentModel, "sentiment")
 				sentimentBatch = nil
 			}
 			if len(emotionBatch) > 0 {
-				s.processBatch(emotionBatch, s.emotionModel)
+				s.processBatch(emotionBatch, s.emotionModel, "emotion")
 				emotionBatch = nil
 			}
 			timer.Reset(50 * time.Millisecond)
@@ -116,9 +121,8 @@ func (s *MLService) StartBatchProcessor() {
 	}
 }
 
-func (s *MLService) processBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel) {
+func (s *MLService) processBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel, typeModel string) {
 	var allIDs, allTypeIDs, allAttentionMasks [][]uint32
-
 	for _, req := range batch {
 		encoding := model.Tokenizer.EncodeWithOptions(
 			req.Text,
@@ -141,8 +145,14 @@ func (s *MLService) processBatch(batch []*models.PredictionRequest, model *model
 		defer tensor.Destroy()
 		inputTensors[i] = tensor
 	}
-
-	outputShape := ort.NewShape(int64(len(batch)), 3)
+	if typeModel != "emotion" && typeModel != "sentiment" {
+		panic("wrong type")
+	}
+	outputSize := SentimentOutputSize
+	if typeModel == "emotion" {
+		outputSize = EmotionOutputSize
+	}
+	outputShape := ort.NewShape(int64(len(batch)), int64(outputSize))
 	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
 	if err != nil {
 		sendErrorToBatch(batch, err)
@@ -151,7 +161,7 @@ func (s *MLService) processBatch(batch []*models.PredictionRequest, model *model
 	defer outputTensor.Destroy()
 
 	s.sentimentModel.ModelMutex.Lock()
-	err = s.sentimentModel.Session.Run(inputTensors, []ort.Value{outputTensor})
+	err = model.Session.Run(inputTensors, []ort.Value{outputTensor})
 	s.sentimentModel.ModelMutex.Unlock()
 
 	if err != nil {
@@ -160,7 +170,12 @@ func (s *MLService) processBatch(batch []*models.PredictionRequest, model *model
 	}
 
 	outputData := outputTensor.GetData()
-	results := modelUtils.BatchResults(outputData, len(batch))
+	var results [][]float64
+	if typeModel == "emotion" {
+		results = modelUtils.BatchResults(outputData, len(batch), "emotion")
+	} else {
+		results = modelUtils.BatchResults(outputData, len(batch), "sentiment")
+	}
 
 	for i, req := range batch {
 		if i < len(results) {

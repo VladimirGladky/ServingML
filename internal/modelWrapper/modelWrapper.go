@@ -21,10 +21,6 @@ func NewWrapperModel(tokenizerPath string, modelPath string) (*WrapperModel, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to load tokenizer: %v", err)
 	}
-	ort.SetSharedLibraryPath("/usr/lib/libonnxruntime.so")
-	if err := ort.InitializeEnvironment(); err != nil {
-		return nil, fmt.Errorf("failed to initialize ONNX Runtime: %v", err)
-	}
 
 	session, err := ort.NewDynamicAdvancedSession(
 		modelPath,

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"syscall"
 
+	ort "github.com/yalue/onnxruntime_go"
 	"go.uber.org/zap"
 )
 
@@ -30,11 +31,19 @@ func New(cfg *config.Config, ctx context.Context) *App {
 	//	panic(err)
 	//}
 	//repo := repository.New(db, ctx)
-	sentimentModel, err := modelWrapper.NewWrapperModel("/home/smooth/Рабочий стол/TestProject/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json", "/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx")
+	ort.SetSharedLibraryPath("/usr/lib/libonnxruntime.so")
+	if err := ort.InitializeEnvironment(); err != nil {
+		panic(err)
+	}
+	sentimentModel, err := modelWrapper.NewWrapperModel(
+		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json",
+		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx")
 	if err != nil {
 		panic(err)
 	}
-	emotionModel, err := modelWrapper.NewWrapperModel("", "")
+	emotionModel, err := modelWrapper.NewWrapperModel(
+		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/tokenizer.json",
+		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx")
 	if err != nil {
 		panic(err)
 	}

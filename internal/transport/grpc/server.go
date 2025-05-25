@@ -4,6 +4,7 @@ import (
 	"ServingML/gen/proto/model"
 	"ServingML/internal/service"
 	"context"
+
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +22,7 @@ func Register(s *grpc.Server, mlService *service.MLService) {
 }
 
 func (s *MLServer) PredictSentiment(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
-	id, err := s.mlService.Predict(ctx, req.Text)
+	id, err := s.mlService.PredictSentiment(ctx, req.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +30,7 @@ func (s *MLServer) PredictSentiment(ctx context.Context, req *model.BertRequest)
 }
 
 func (s *MLServer) PredictEmotion(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
-	id, err := s.mlService.Predict(ctx, req.Text)
+	id, err := s.mlService.PredictEmotion(ctx, req.Text)
 	if err != nil {
 		return nil, err
 	}

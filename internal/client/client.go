@@ -4,11 +4,12 @@ import (
 	"ServingML/gen/proto/model"
 	"ServingML/pkg/logger"
 	"context"
+	"sync"
+	"time"
+
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"sync"
-	"time"
 )
 
 type Client struct {
@@ -58,16 +59,12 @@ func (c *Client) Run(wg *sync.WaitGroup, typeModel string) error {
 			}
 		}
 		if typeModel == "emotion" {
-			resp, err := client.PredictEmotion(reqCtx, &model.BertRequest{Text: text})
+			_, err := client.PredictEmotion(reqCtx, &model.BertRequest{Text: text})
 			if err != nil {
 				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
 					zap.String("text", text),
 					zap.Error(err))
 				continue
-			}
-			if i == 0 || i == 1 || i == 2 {
-				logger.GetLoggerFromCtx(c.ctx).Info("predict result",
-					zap.String("result", resp.Result))
 			}
 		}
 	}
