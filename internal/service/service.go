@@ -4,9 +4,13 @@ import (
 	"ServingML/internal/domain/models"
 	"ServingML/internal/modelWrapper"
 	"ServingML/internal/repository"
+	"ServingML/pkg/converter"
+	"ServingML/pkg/logger"
 	"ServingML/pkg/modelUtils"
 	"context"
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/daulet/tokenizers"
@@ -25,6 +29,8 @@ type MLService struct {
 	queue       chan *models.PredictionRequest
 	firstModel  *modelWrapper.WrapperModel
 	secondModel *modelWrapper.WrapperModel
+	initialized uint32
+	initOnce    sync.Once
 }
 
 func New(ctx context.Context, sentimentModel *modelWrapper.WrapperModel, emotionModel *modelWrapper.WrapperModel) *MLService {
@@ -37,6 +43,10 @@ func New(ctx context.Context, sentimentModel *modelWrapper.WrapperModel, emotion
 }
 
 func (s *MLService) PredictSentiment(ctx context.Context, text string) (string, error) {
+	s.initOnce.Do(func() {
+		go s.StartBatchProcessor()
+		logger.GetLoggerFromCtx(s.ctx).Info("BatchProcessor запущен по требованию")
+	})
 	respCh := make(chan *models.PredictionResponse, 1)
 	select {
 	case s.queue <- &models.PredictionRequest{
@@ -53,11 +63,15 @@ func (s *MLService) PredictSentiment(ctx context.Context, text string) (string, 
 		if resp.Error != nil {
 			return "", resp.Error
 		}
-		return convertSentiment(resp.Probabilities), nil
+		return converter.ConvertFirstModel(resp.Probabilities), nil
 	}
 }
 
 func (s *MLService) PredictEmotion(ctx context.Context, text string) (string, error) {
+	s.initOnce.Do(func() {
+		go s.StartBatchProcessor()
+		logger.GetLoggerFromCtx(s.ctx).Info("BatchProcessor запущен по требованию")
+	})
 	respCh := make(chan *models.PredictionResponse, 1)
 	select {
 	case s.queue <- &models.PredictionRequest{
@@ -74,11 +88,14 @@ func (s *MLService) PredictEmotion(ctx context.Context, text string) (string, er
 		if resp.Error != nil {
 			return "", resp.Error
 		}
-		return convertEmotion(resp.Probabilities), nil
+		return converter.ConvertSecondModel(resp.Probabilities), nil
 	}
 }
 
 func (s *MLService) StartBatchProcessor() {
+	if !atomic.CompareAndSwapUint32(&s.initialized, 0, 1) {
+		return
+	}
 	modelFirstBatch := make([]*models.PredictionRequest, 0)
 	modelSecondBatch := make([]*models.PredictionRequest, 0)
 	timer := time.NewTimer(50 * time.Millisecond)
@@ -176,59 +193,4 @@ func sendErrorToBatch(batch []*models.PredictionRequest, err error) {
 		req.ResponseCh <- &models.PredictionResponse{Error: err}
 		close(req.ResponseCh)
 	}
-}
-
-func convertSentiment(probabilities []float64) string {
-	if probabilities[0] > probabilities[1] && probabilities[0] > probabilities[2] {
-		return "neutral"
-	} else if probabilities[1] > probabilities[0] && probabilities[1] > probabilities[2] {
-		return "positive"
-	}
-	return "negative"
-}
-
-func convertEmotion(probabilities []float64) string {
-	emotions := []string{
-		"восхищение",      // admiration
-		"веселье",         // amusement
-		"злость",          // anger
-		"раздражение",     // annoyance
-		"одобрение",       // approval
-		"забота",          // caring
-		"непонимание",     // confusion
-		"любопытство",     // curiosity
-		"желание",         // desire
-		"разочарование",   // disappointment
-		"неодобрение",     // disapproval
-		"отвращение",      // disgust
-		"смущение",        // embarrassment
-		"возбуждение",     // excitement
-		"страх",           // fear
-		"признательность", // gratitude
-		"горе",            // grief
-		"радость",         // joy
-		"любовь",          // love
-		"нервозность",     // nervousness
-		"оптимизм",        // optimism
-		"гордость",        // pride
-		"осознание",       // realization
-		"облегчение",      // relief
-		"раскаяние",       // remorse
-		"грусть",          // sadness
-		"удивление",       // surprise
-		"нейтральность",   // neutral
-	}
-
-	if len(probabilities) != len(emotions) {
-		return "неизвестно"
-	}
-
-	maxIndex := 0
-	for i, p := range probabilities {
-		if p > probabilities[maxIndex] {
-			maxIndex = i
-		}
-	}
-
-	return emotions[maxIndex]
 }

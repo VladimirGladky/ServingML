@@ -71,12 +71,6 @@ func (a *App) Run() error {
 			a.cancel()
 		}
 	}()
-	a.wg.Add(1)
-	go func() {
-		defer a.wg.Done()
-		logger.GetLoggerFromCtx(a.ctx).Info("starting batchProcessor")
-		a.service.StartBatchProcessor()
-	}()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	select {

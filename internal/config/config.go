@@ -3,7 +3,6 @@ package config
 import (
 	"ServingML/pkg/postgres"
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -21,7 +20,6 @@ type Config struct {
 }
 
 func New() (*Config, error) {
-	_ = godotenv.Load(".env")
 	var cfg Config
 	if err := cleanenv.ReadConfig("./config/config.yaml", &cfg); err != nil {
 		return nil, err
