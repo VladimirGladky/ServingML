@@ -13,15 +13,16 @@ type WrapperModel struct {
 	Tokenizer  *tokenizers.Tokenizer
 	InputNames []string
 	OutputName []string
+	BatchSize  int
+	OutputSize int
 	ModelMutex sync.Mutex
 }
 
-func NewWrapperModel(tokenizerPath string, modelPath string) (*WrapperModel, error) {
+func NewWrapperModel(tokenizerPath string, modelPath string, batchSize, outputSize int) (*WrapperModel, error) {
 	tk, err := tokenizers.FromFile(tokenizerPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load tokenizer: %v", err)
 	}
-
 	session, err := ort.NewDynamicAdvancedSession(
 		modelPath,
 		[]string{"input_ids", "token_type_ids", "attention_mask"},
@@ -37,6 +38,8 @@ func NewWrapperModel(tokenizerPath string, modelPath string) (*WrapperModel, err
 		Tokenizer:  tk,
 		InputNames: []string{"input_ids", "token_type_ids", "attention_mask"},
 		OutputName: []string{"logits"},
+		BatchSize:  batchSize,
+		OutputSize: outputSize,
 	}, nil
 }
 

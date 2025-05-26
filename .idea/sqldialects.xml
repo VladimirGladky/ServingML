@@ -2,6 +2,5 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/internal/repository/repository.go" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/migrations/20250524175545_create_files_management_table.up.sql" dialect="PostgreSQL" />
   </component>
 </project>

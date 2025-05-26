@@ -26,24 +26,21 @@ type App struct {
 }
 
 func New(cfg *config.Config, ctx context.Context) *App {
-	//db, err := postgres.New(cfg.Postgres)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//repo := repository.New(db, ctx)
 	ort.SetSharedLibraryPath("/usr/lib/libonnxruntime.so")
 	if err := ort.InitializeEnvironment(); err != nil {
 		panic(err)
 	}
 	sentimentModel, err := modelWrapper.NewWrapperModel(
-		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json",
-		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx")
+		cfg.Model1TokenizerPath,
+		cfg.Model1Path,
+		cfg.Model2BatchSize, cfg.Model1OutputSize)
 	if err != nil {
 		panic(err)
 	}
 	emotionModel, err := modelWrapper.NewWrapperModel(
-		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/tokenizer.json",
-		"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx")
+		cfg.Model1TokenizerPath,
+		cfg.Model2Path,
+		cfg.Model2BatchSize, cfg.Model2OutputSize)
 	if err != nil {
 		panic(err)
 	}

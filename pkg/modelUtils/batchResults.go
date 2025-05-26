@@ -5,20 +5,7 @@ const (
 	EmotionOutputSize   = 28
 )
 
-func BatchResults(outputData []float32, batchSize int, modelType string) [][]float64 {
-	var outputSize int
-	if modelType != "emotion" && modelType != "sentiment" {
-		panic("wrong type")
-	}
-	switch modelType {
-	case "emotion":
-		outputSize = EmotionOutputSize
-	case "sentiment":
-		outputSize = SentimentOutputSize
-	default:
-		outputSize = SentimentOutputSize
-	}
-
+func BatchResults(outputData []float32, batchSize int, outputSize int) [][]float64 {
 	results := make([][]float64, batchSize)
 	for i := 0; i < batchSize; i++ {
 		start := i * outputSize

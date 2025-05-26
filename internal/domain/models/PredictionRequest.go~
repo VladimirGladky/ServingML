@@ -3,8 +3,8 @@ package models
 type PredictionType int
 
 const (
-	FirstPrediction PredictionType = iota
-	SecondPrediction
+	SentimentPrediction PredictionType = iota
+	EmotionPrediction
 )
 
 type PredictionRequest struct {

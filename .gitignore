@@ -1,4 +1,4 @@
-data/rubert-tiny2-russian-sentiment-onnx/sentimentModel.onnx
+data/rubert-tiny2-russian-sentiment-onnx/firstModel.onnx
 *.onnx
 internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx
 internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx
