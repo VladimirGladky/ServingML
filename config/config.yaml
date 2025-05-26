@@ -1,19 +1,12 @@
 grpc_port: 6060
 grpc_host: localhost
 
-Postgres:
-  postgres_host: ${POSTGRES_HOST}
-  postgres_port: ${POSTGRES_PORT}
-  postgres_db: ${POSTGRES_DB}
-  postgres_user: ${POSTGRES_USER}
-  postgres_password: ${POSTGRES_PASSWORD}
-
 model1_tokenizer_path: /home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json
 model1_model_path: /home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx
 model1_output_size: 3
-model1_batch_size: 4
+model1_batch_size: 2
 
 model2_tokenizer_path: /home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/tokenizer.json
 model2_model_path: /home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx
 model2_output_size: 28
-model2_batch_size: 4
+model2_batch_size: 2
