@@ -23,10 +23,22 @@ func NewWrapperModel(tokenizerPath string, modelPath string, batchSize, outputSi
 	if err != nil {
 		return nil, fmt.Errorf("failed to load tokenizer: %v", err)
 	}
+	input, output, err := ort.GetInputOutputInfo(modelPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load info: %v", err)
+	}
+	var inputs []string
+	for _, x := range input {
+		inputs = append(inputs, x.Name)
+	}
+	var outputs []string
+	for _, x := range output {
+		inputs = append(outputs, x.Name)
+	}
 	session, err := ort.NewDynamicAdvancedSession(
 		modelPath,
-		[]string{"input_ids", "token_type_ids", "attention_mask"},
-		[]string{"logits"},
+		inputs,
+		outputs,
 		nil,
 	)
 	if err != nil {
@@ -36,8 +48,8 @@ func NewWrapperModel(tokenizerPath string, modelPath string, batchSize, outputSi
 	return &WrapperModel{
 		Session:    session,
 		Tokenizer:  tk,
-		InputNames: []string{"input_ids", "token_type_ids", "attention_mask"},
-		OutputName: []string{"logits"},
+		InputNames: inputs,
+		OutputName: outputs,
 		BatchSize:  batchSize,
 		OutputSize: outputSize,
 	}, nil
