@@ -19,16 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BertService_PredictSentiment_FullMethodName = "/model.BertService/PredictSentiment"
-	BertService_PredictEmotion_FullMethodName   = "/model.BertService/PredictEmotion"
+	BertService_PredictFirstModel_FullMethodName  = "/model.BertService/PredictFirstModel"
+	BertService_PredictSecondModel_FullMethodName = "/model.BertService/PredictSecondModel"
 )
 
 // BertServiceClient is the client API for BertService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BertServiceClient interface {
-	PredictSentiment(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error)
-	PredictEmotion(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error)
+	PredictFirstModel(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error)
+	PredictSecondModel(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error)
 }
 
 type bertServiceClient struct {
@@ -39,20 +39,20 @@ func NewBertServiceClient(cc grpc.ClientConnInterface) BertServiceClient {
 	return &bertServiceClient{cc}
 }
 
-func (c *bertServiceClient) PredictSentiment(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error) {
+func (c *bertServiceClient) PredictFirstModel(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BertResponse)
-	err := c.cc.Invoke(ctx, BertService_PredictSentiment_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, BertService_PredictFirstModel_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bertServiceClient) PredictEmotion(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error) {
+func (c *bertServiceClient) PredictSecondModel(ctx context.Context, in *BertRequest, opts ...grpc.CallOption) (*BertResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BertResponse)
-	err := c.cc.Invoke(ctx, BertService_PredictEmotion_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, BertService_PredictSecondModel_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +63,8 @@ func (c *bertServiceClient) PredictEmotion(ctx context.Context, in *BertRequest,
 // All implementations must embed UnimplementedBertServiceServer
 // for forward compatibility.
 type BertServiceServer interface {
-	PredictSentiment(context.Context, *BertRequest) (*BertResponse, error)
-	PredictEmotion(context.Context, *BertRequest) (*BertResponse, error)
+	PredictFirstModel(context.Context, *BertRequest) (*BertResponse, error)
+	PredictSecondModel(context.Context, *BertRequest) (*BertResponse, error)
 	mustEmbedUnimplementedBertServiceServer()
 }
 
@@ -75,11 +75,11 @@ type BertServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedBertServiceServer struct{}
 
-func (UnimplementedBertServiceServer) PredictSentiment(context.Context, *BertRequest) (*BertResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PredictSentiment not implemented")
+func (UnimplementedBertServiceServer) PredictFirstModel(context.Context, *BertRequest) (*BertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PredictFirstModel not implemented")
 }
-func (UnimplementedBertServiceServer) PredictEmotion(context.Context, *BertRequest) (*BertResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PredictEmotion not implemented")
+func (UnimplementedBertServiceServer) PredictSecondModel(context.Context, *BertRequest) (*BertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PredictSecondModel not implemented")
 }
 func (UnimplementedBertServiceServer) mustEmbedUnimplementedBertServiceServer() {}
 func (UnimplementedBertServiceServer) testEmbeddedByValue()                     {}
@@ -102,38 +102,38 @@ func RegisterBertServiceServer(s grpc.ServiceRegistrar, srv BertServiceServer) {
 	s.RegisterService(&BertService_ServiceDesc, srv)
 }
 
-func _BertService_PredictSentiment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BertService_PredictFirstModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BertRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BertServiceServer).PredictSentiment(ctx, in)
+		return srv.(BertServiceServer).PredictFirstModel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BertService_PredictSentiment_FullMethodName,
+		FullMethod: BertService_PredictFirstModel_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BertServiceServer).PredictSentiment(ctx, req.(*BertRequest))
+		return srv.(BertServiceServer).PredictFirstModel(ctx, req.(*BertRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BertService_PredictEmotion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BertService_PredictSecondModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BertRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BertServiceServer).PredictEmotion(ctx, in)
+		return srv.(BertServiceServer).PredictSecondModel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BertService_PredictEmotion_FullMethodName,
+		FullMethod: BertService_PredictSecondModel_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BertServiceServer).PredictEmotion(ctx, req.(*BertRequest))
+		return srv.(BertServiceServer).PredictSecondModel(ctx, req.(*BertRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -146,12 +146,12 @@ var BertService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BertServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "PredictSentiment",
-			Handler:    _BertService_PredictSentiment_Handler,
+			MethodName: "PredictFirstModel",
+			Handler:    _BertService_PredictFirstModel_Handler,
 		},
 		{
-			MethodName: "PredictEmotion",
-			Handler:    _BertService_PredictEmotion_Handler,
+			MethodName: "PredictSecondModel",
+			Handler:    _BertService_PredictSecondModel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

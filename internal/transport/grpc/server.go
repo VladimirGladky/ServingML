@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"ServingML/gen/proto/model"
-	"ServingML/internal/service"
+	"ServingML/internal/batcher"
 	"context"
 
 	"google.golang.org/grpc"
@@ -10,27 +10,33 @@ import (
 
 type MLServer struct {
 	model.UnimplementedBertServiceServer
-	mlService *service.MLService
+	mlService *batcher.ServiceBatcher
 }
 
-func NewMLServer(mlService *service.MLService) *MLServer {
+func NewMLServer(mlService *batcher.ServiceBatcher) *MLServer {
 	return &MLServer{mlService: mlService}
 }
 
-func Register(s *grpc.Server, mlService *service.MLService) {
+func Register(s *grpc.Server, mlService *batcher.ServiceBatcher) {
 	model.RegisterBertServiceServer(s, NewMLServer(mlService))
 }
 
-func (s *MLServer) PredictSentiment(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
-	id, err := s.mlService.PredictSentiment(ctx, req.Text)
+func (s *MLServer) PredictFirstModel(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
+	if req.Text == "" {
+		return nil, nil
+	}
+	id, err := s.mlService.PredictFirstModel(ctx, req.Text)
 	if err != nil {
 		return nil, err
 	}
 	return &model.BertResponse{Result: id}, nil
 }
 
-func (s *MLServer) PredictEmotion(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
-	id, err := s.mlService.PredictEmotion(ctx, req.Text)
+func (s *MLServer) PredictSecondModel(ctx context.Context, req *model.BertRequest) (*model.BertResponse, error) {
+	if req.Text == "" {
+		return nil, nil
+	}
+	id, err := s.mlService.PredictSecondModel(ctx, req.Text)
 	if err != nil {
 		return nil, err
 	}

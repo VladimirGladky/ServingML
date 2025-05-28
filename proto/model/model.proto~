@@ -5,8 +5,8 @@ package model;
 option go_package = "./proto/model";
 
 service BertService {
-  rpc PredictFirstModel (BertRequest) returns (BertResponse);
-  rpc PredictSecondModel (BertRequest) returns (BertResponse);
+  rpc PredictSentiment (BertRequest) returns (BertResponse);
+  rpc PredictEmotion (BertRequest) returns (BertResponse);
 }
 
 message BertRequest {

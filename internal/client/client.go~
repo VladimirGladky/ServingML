@@ -50,7 +50,7 @@ func (c *Client) Run(wg *sync.WaitGroup, typeModel string) error {
 		reqCtx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
 		defer cancel()
 		if typeModel == "sentiment" {
-			_, err := client.PredictFirstModel(reqCtx, &model.BertRequest{Text: text})
+			_, err := client.PredictSentiment(reqCtx, &model.BertRequest{Text: text})
 			if err != nil {
 				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
 					zap.String("text", text),
@@ -59,7 +59,7 @@ func (c *Client) Run(wg *sync.WaitGroup, typeModel string) error {
 			}
 		}
 		if typeModel == "emotion" {
-			_, err := client.PredictSecondModel(reqCtx, &model.BertRequest{Text: text})
+			_, err := client.PredictEmotion(reqCtx, &model.BertRequest{Text: text})
 			if err != nil {
 				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
 					zap.String("text", text),

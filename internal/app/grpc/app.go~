@@ -1,8 +1,8 @@
 package grpcapp
 
 import (
-	"ServingML/internal/batcher"
 	"ServingML/internal/config"
+	"ServingML/internal/batcher"
 	grpc2 "ServingML/internal/transport/grpc"
 	"ServingML/pkg/logger"
 	"context"

@@ -2,9 +2,10 @@ package app
 
 import (
 	grpcapp2 "ServingML/internal/app/grpc"
+	service2 "ServingML/internal/batcher"
 	"ServingML/internal/config"
+	"ServingML/internal/inference"
 	"ServingML/internal/modelWrapper"
-	service2 "ServingML/internal/service"
 	"ServingML/pkg/logger"
 	"context"
 	"os"
@@ -22,7 +23,7 @@ type App struct {
 	gRPCServer *grpcapp2.App
 	wg         sync.WaitGroup
 	cancel     context.CancelFunc
-	service    *service2.MLService
+	service    *service2.ServiceBatcher
 }
 
 func New(cfg *config.Config, ctx context.Context) *App {
@@ -30,21 +31,22 @@ func New(cfg *config.Config, ctx context.Context) *App {
 	if err := ort.InitializeEnvironment(); err != nil {
 		panic(err)
 	}
-	sentimentModel, err := modelWrapper.NewWrapperModel(
+	firstModel, err := modelWrapper.NewWrapperModel(
 		cfg.Model1TokenizerPath,
 		cfg.Model1Path,
 		cfg.Model2BatchSize, cfg.Model1OutputSize)
 	if err != nil {
 		panic(err)
 	}
-	emotionModel, err := modelWrapper.NewWrapperModel(
+	secondModel, err := modelWrapper.NewWrapperModel(
 		cfg.Model1TokenizerPath,
 		cfg.Model2Path,
 		cfg.Model2BatchSize, cfg.Model2OutputSize)
 	if err != nil {
 		panic(err)
 	}
-	service := service2.New(ctx, sentimentModel, emotionModel)
+	inf := inference.New()
+	service := service2.New(ctx, firstModel, secondModel, inf)
 	gRPCapp := grpcapp2.New(cfg, service, ctx)
 	return &App{
 		cfg:        cfg,
