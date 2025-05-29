@@ -33,11 +33,11 @@ func NewWrapperModel(tokenizerPath string, modelPath string, batchSize, outputSi
 	}
 	var outputs []string
 	for _, x := range output {
-		inputs = append(outputs, x.Name)
+		outputs = append(outputs, x.Name)
 	}
 	session, err := ort.NewDynamicAdvancedSession(
 		modelPath,
-		inputs,
+		[]string{"input_ids", "token_type_ids", "attention_mask"},
 		outputs,
 		nil,
 	)
