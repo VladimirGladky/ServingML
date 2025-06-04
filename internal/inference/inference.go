@@ -1,6 +1,7 @@
 package inference
 
 import (
+	"ServingML/internal/config"
 	"ServingML/internal/domain/models"
 	"ServingML/internal/modelWrapper"
 	"ServingML/pkg/modelUtils"
@@ -14,10 +15,34 @@ type ServiceInferenceInterface interface {
 	ProcessBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel)
 }
 
-type ServiceInference struct{}
+type ServiceInference struct {
+	FirstModel  *modelWrapper.WrapperModel
+	SecondModel *modelWrapper.WrapperModel
+}
 
-func New() *ServiceInference {
-	return &ServiceInference{}
+func New(cfg *config.Config) *ServiceInference {
+	ort.SetSharedLibraryPath("/usr/lib/libonnxruntime.so")
+	if err := ort.InitializeEnvironment(); err != nil {
+		panic(err)
+	}
+	firstModel, err := modelWrapper.NewWrapperModel(
+		cfg.Model1TokenizerPath,
+		cfg.Model1Path,
+		cfg.Model2BatchSize, cfg.Model1OutputSize)
+	if err != nil {
+		panic(err)
+	}
+	secondModel, err := modelWrapper.NewWrapperModel(
+		cfg.Model1TokenizerPath,
+		cfg.Model2Path,
+		cfg.Model2BatchSize, cfg.Model2OutputSize)
+	if err != nil {
+		panic(err)
+	}
+	return &ServiceInference{
+		FirstModel:  firstModel,
+		SecondModel: secondModel,
+	}
 }
 
 func (s *ServiceInference) ProcessBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel) {

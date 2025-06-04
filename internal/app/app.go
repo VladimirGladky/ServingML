@@ -5,7 +5,6 @@ import (
 	service2 "ServingML/internal/batcher"
 	"ServingML/internal/config"
 	"ServingML/internal/inference"
-	"ServingML/internal/modelWrapper"
 	"ServingML/pkg/logger"
 	"context"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"sync"
 	"syscall"
 
-	ort "github.com/yalue/onnxruntime_go"
 	"go.uber.org/zap"
 )
 
@@ -27,26 +25,8 @@ type App struct {
 }
 
 func New(cfg *config.Config, ctx context.Context) *App {
-	ort.SetSharedLibraryPath("/usr/lib/libonnxruntime.so")
-	if err := ort.InitializeEnvironment(); err != nil {
-		panic(err)
-	}
-	firstModel, err := modelWrapper.NewWrapperModel(
-		cfg.Model1TokenizerPath,
-		cfg.Model1Path,
-		cfg.Model2BatchSize, cfg.Model1OutputSize)
-	if err != nil {
-		panic(err)
-	}
-	secondModel, err := modelWrapper.NewWrapperModel(
-		cfg.Model1TokenizerPath,
-		cfg.Model2Path,
-		cfg.Model2BatchSize, cfg.Model2OutputSize)
-	if err != nil {
-		panic(err)
-	}
-	inf := inference.New()
-	service := service2.New(ctx, firstModel, secondModel, inf)
+	inf := inference.New(cfg)
+	service := service2.New(ctx, inf.FirstModel, inf.SecondModel, inf)
 	gRPCapp := grpcapp2.New(cfg, service, ctx)
 	return &App{
 		cfg:        cfg,
