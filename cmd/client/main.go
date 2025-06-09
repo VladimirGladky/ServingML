@@ -19,7 +19,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			client := client.New(ctx)
-			err := client.Run(&wg, "firstmodel")
+			err := client.Run(&wg, "russian-sentiment")
 			if err != nil {
 				logger.GetLoggerFromCtx(ctx).Fatal("error:", zap.Error(err))
 			}
@@ -34,7 +34,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			client := client.New(ctx)
-			err := client.Run(&wg, "secondmodel")
+			err := client.Run(&wg, "emotion-detection")
 			if err != nil {
 				logger.GetLoggerFromCtx(ctx).Fatal("error:", zap.Error(err))
 			}

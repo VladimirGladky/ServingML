@@ -12,12 +12,11 @@ import (
 )
 
 type ServiceInferenceInterface interface {
-	ProcessBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel)
+	ProcessBatch(batch []*models.PredictionRequest, modelName string)
 }
 
 type ServiceInference struct {
-	FirstModel  *modelWrapper.WrapperModel
-	SecondModel *modelWrapper.WrapperModel
+	Models map[string]*modelWrapper.WrapperModel
 }
 
 func New(cfg *config.Config) *ServiceInference {
@@ -25,27 +24,31 @@ func New(cfg *config.Config) *ServiceInference {
 	if err := ort.InitializeEnvironment(); err != nil {
 		panic(err)
 	}
-	firstModel, err := modelWrapper.NewWrapperModel(
-		cfg.Model1TokenizerPath,
-		cfg.Model1Path,
-		cfg.Model2BatchSize, cfg.Model1OutputSize)
-	if err != nil {
-		panic(err)
+	ms := make(map[string]*modelWrapper.WrapperModel)
+
+	for _, modelCfg := range cfg.Models {
+		model, err := modelWrapper.NewWrapperModel(
+			modelCfg.TokenizerPath,
+			modelCfg.ModelPath,
+			modelCfg.BatchSize,
+			modelCfg.OutputSize)
+		if err != nil {
+			panic(fmt.Errorf("failed to load model %s: %v", modelCfg.Name, err))
+		}
+		ms[modelCfg.Name] = model
 	}
-	secondModel, err := modelWrapper.NewWrapperModel(
-		cfg.Model1TokenizerPath,
-		cfg.Model2Path,
-		cfg.Model2BatchSize, cfg.Model2OutputSize)
-	if err != nil {
-		panic(err)
-	}
+
 	return &ServiceInference{
-		FirstModel:  firstModel,
-		SecondModel: secondModel,
+		Models: ms,
 	}
 }
 
-func (s *ServiceInference) ProcessBatch(batch []*models.PredictionRequest, model *modelWrapper.WrapperModel) {
+func (s *ServiceInference) ProcessBatch(batch []*models.PredictionRequest, modelName string) {
+	model, ok := s.Models[modelName]
+	if !ok {
+		sendErrorToBatch(batch, fmt.Errorf("model %s not found", modelName))
+		return
+	}
 	var allIDs, allTypeIDs, allAttentionMasks [][]uint32
 	for _, req := range batch {
 		encoding := model.Tokenizer.EncodeWithOptions(
@@ -59,7 +62,7 @@ func (s *ServiceInference) ProcessBatch(batch []*models.PredictionRequest, model
 		allAttentionMasks = append(allAttentionMasks, encoding.AttentionMask)
 	}
 
-	inputTensors := make([]ort.Value, 3)
+	inputTensors := make([]ort.Value, len(model.InputNames))
 	for i, data := range [][][]uint32{allIDs, allTypeIDs, allAttentionMasks} {
 		tensor, err := modelUtils.CreateInputTensor(data)
 		if err != nil {

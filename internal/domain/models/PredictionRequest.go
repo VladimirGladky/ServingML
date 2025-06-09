@@ -1,14 +1,7 @@
 package models
 
-type PredictionType int
-
-const (
-	FirstPrediction PredictionType = iota
-	SecondPrediction
-)
-
 type PredictionRequest struct {
-	Text string
-	PredictionType
+	Text       string
+	ModelName  string
 	ResponseCh chan *PredictionResponse
 }

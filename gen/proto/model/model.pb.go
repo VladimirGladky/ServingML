@@ -24,6 +24,7 @@ const (
 type BertRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	ModelName     string                 `protobuf:"bytes,2,opt,name=modelName,proto3" json:"modelName,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -61,6 +62,13 @@ func (*BertRequest) Descriptor() ([]byte, []int) {
 func (x *BertRequest) GetText() string {
 	if x != nil {
 		return x.Text
+	}
+	return ""
+}
+
+func (x *BertRequest) GetModelName() string {
+	if x != nil {
+		return x.ModelName
 	}
 	return ""
 }
@@ -113,14 +121,14 @@ var File_proto_model_model_proto protoreflect.FileDescriptor
 
 const file_proto_model_model_proto_rawDesc = "" +
 	"\n" +
-	"\x17proto/model/model.proto\x12\x05model\"!\n" +
+	"\x17proto/model/model.proto\x12\x05model\"?\n" +
 	"\vBertRequest\x12\x12\n" +
-	"\x04text\x18\x01 \x01(\tR\x04text\"&\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x12\x1c\n" +
+	"\tmodelName\x18\x02 \x01(\tR\tmodelName\"&\n" +
 	"\fBertResponse\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\tR\x06result2\x8a\x01\n" +
-	"\vBertService\x12<\n" +
-	"\x11PredictFirstModel\x12\x12.model.BertRequest\x1a\x13.model.BertResponse\x12=\n" +
-	"\x12PredictSecondModel\x12\x12.model.BertRequest\x1a\x13.model.BertResponseB\x0fZ\r./proto/modelb\x06proto3"
+	"\x06result\x18\x01 \x01(\tR\x06result2A\n" +
+	"\vBertService\x122\n" +
+	"\aPredict\x12\x12.model.BertRequest\x1a\x13.model.BertResponseB\x0fZ\r./proto/modelb\x06proto3"
 
 var (
 	file_proto_model_model_proto_rawDescOnce sync.Once
@@ -140,12 +148,10 @@ var file_proto_model_model_proto_goTypes = []any{
 	(*BertResponse)(nil), // 1: model.BertResponse
 }
 var file_proto_model_model_proto_depIdxs = []int32{
-	0, // 0: model.BertService.PredictFirstModel:input_type -> model.BertRequest
-	0, // 1: model.BertService.PredictSecondModel:input_type -> model.BertRequest
-	1, // 2: model.BertService.PredictFirstModel:output_type -> model.BertResponse
-	1, // 3: model.BertService.PredictSecondModel:output_type -> model.BertResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	0, // 0: model.BertService.Predict:input_type -> model.BertRequest
+	1, // 1: model.BertService.Predict:output_type -> model.BertResponse
+	1, // [1:2] is the sub-list for method output_type
+	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

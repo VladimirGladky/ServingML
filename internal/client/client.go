@@ -49,23 +49,13 @@ func (c *Client) Run(wg *sync.WaitGroup, typeModel string) error {
 
 		reqCtx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
 		defer cancel()
-		if typeModel == "firstmodel" {
-			_, err := client.PredictFirstModel(reqCtx, &model.BertRequest{Text: text})
-			if err != nil {
-				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
-					zap.String("text", text),
-					zap.Error(err))
-				continue
-			}
-		}
-		if typeModel == "secondmodel" {
-			_, err := client.PredictSecondModel(reqCtx, &model.BertRequest{Text: text})
-			if err != nil {
-				logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
-					zap.String("text", text),
-					zap.Error(err))
-				continue
-			}
+
+		_, err := client.Predict(reqCtx, &model.BertRequest{Text: text, ModelName: typeModel})
+		if err != nil {
+			logger.GetLoggerFromCtx(c.ctx).Error("predict failed",
+				zap.String("text", text),
+				zap.Error(err))
+			continue
 		}
 	}
 	return nil

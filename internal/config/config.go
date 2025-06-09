@@ -4,17 +4,21 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+type ModelConfig struct {
+	Name          string `yaml:"name"`
+	TokenizerPath string `yaml:"tokenizer_path"`
+	ModelPath     string `yaml:"model_path"`
+	InputSize     int    `yaml:"input_size"`
+	OutputSize    int    `yaml:"output_size"`
+	BatchSize     int    `yaml:"batch_size"`
+}
+
 type Config struct {
-	GrpcPort            string `yaml:"grpc_port" env:"GRPC_PORT" env-default:"6060"`
-	GrpcHost            string `yaml:"grpc_host" env:"GRPC_HOST" env-default:"localhost"`
-	Model1TokenizerPath string `yaml:"model1_tokenizer_path" env:"MODEL1_TOKENIZER_PATH" env-default:"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json"`
-	Model1Path          string `yaml:"model1_model_path" env:"MODEL1_MODEL_PATH" env-default:"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx"`
-	Model1OutputSize    int    `yaml:"model1_output_size" env:"MODEL1_OUTPUT_SIZE" env-default:"3"`
-	Model1BatchSize     int    `yaml:"model1_batch_size" env:"MODEL1_BATCH_SIZE" env-default:"4"`
-	Model2TokenizerPath string `yaml:"model2_tokenizer_path" env:"MODEL2_TOKENIZER_PATH" env-default:"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/tokenizer.json"`
-	Model2Path          string `yaml:"model2_model_path" env:"MODEL2_MODEL_PATH" env-default:"/home/smooth/Рабочий стол/ServingML/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx"`
-	Model2OutputSize    int    `yaml:"model2_output_size" env:"MODEL2_OUTPUT_SIZE" env-default:"28"`
-	Model2BatchSize     int    `yaml:"model2_batch_size" env:"MODEL2_BATCH_SIZE" env-default:"4"`
+	GrpcPort     string        `yaml:"grpc_port" env:"GRPC_PORT" env-default:"6060"`
+	GrpcHost     string        `yaml:"grpc_host" env:"GRPC_HOST" env-default:"localhost"`
+	BatchTimeout string        `yaml:"batch_timeout" env:"BATCH_TIMEOUT" env-default:"50"`
+	Timeout      string        `yaml:"timeout" env:"TIMEOUT" env-default:"50"`
+	Models       []ModelConfig `yaml:"models"`
 }
 
 func New() (*Config, error) {

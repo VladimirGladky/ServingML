@@ -1,5 +1,16 @@
 package converter
 
+func Convert(modelName string, probabilities []float64) string {
+	switch modelName {
+	case "sentiment-analysis":
+		return ConvertFirstModel(probabilities)
+	case "emotion-detection":
+		return ConvertSecondModel(probabilities)
+	default:
+		return "unknown model"
+	}
+}
+
 func ConvertFirstModel(probabilities []float64) string {
 	if probabilities[0] > probabilities[1] && probabilities[0] > probabilities[2] {
 		return "neutral"

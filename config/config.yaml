@@ -1,14 +1,19 @@
 grpc_port: 6060
 grpc_host: 0.0.0.0
+batch_timeout: 50
+timeout : 10
 
-model1_tokenizer_path: /app/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json
-model1_model_path: /app/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx
-model1_input_size: 1
-model1_output_size: 3
-model1_batch_size: 2
+models:
+  - name: "russian-sentiment"
+    tokenizer_path: "/app/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/tokenizer.json"
+    model_path: "/app/internal/modelWrapper/data/rubert-tiny2-russian-sentiment-onnx/model.onnx"
+    input_size: 1
+    output_size: 3
+    batch_size: 2
 
-model2_tokenizer_path: /app/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/tokenizer.json
-model2_model_path: /app/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx
-model2_input_size: 1
-model2_output_size: 28
-model2_batch_size: 2
+  - name: "emotion-detection"
+    tokenizer_path: "/app/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/tokenizer.json"
+    model_path: "/app/internal/modelWrapper/data/rubert-tiny2-russian-emotion-detection-ru-go-emotions/model.onnx"
+    input_size: 1
+    output_size: 28
+    batch_size: 2

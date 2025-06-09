@@ -25,8 +25,12 @@ type App struct {
 }
 
 func New(cfg *config.Config, ctx context.Context) *App {
+	batchSizes := make(map[string]int)
+	for _, model := range cfg.Models {
+		batchSizes[model.Name] = model.BatchSize
+	}
 	inf := inference.New(cfg)
-	service := service2.New(ctx, inf.FirstModel, inf.SecondModel, inf)
+	service := service2.New(ctx, inf, batchSizes, cfg)
 	gRPCapp := grpcapp2.New(cfg, service, ctx)
 	return &App{
 		cfg:        cfg,

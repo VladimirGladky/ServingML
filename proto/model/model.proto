@@ -5,12 +5,12 @@ package model;
 option go_package = "./proto/model";
 
 service BertService {
-  rpc PredictFirstModel (BertRequest) returns (BertResponse);
-  rpc PredictSecondModel (BertRequest) returns (BertResponse);
+  rpc Predict (BertRequest) returns (BertResponse);
 }
 
 message BertRequest {
   string text = 1;
+  string modelName = 2;
 }
 
 message BertResponse {
