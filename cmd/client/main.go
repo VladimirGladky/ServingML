@@ -28,7 +28,7 @@ func main() {
 	wg.Wait()
 	elapsed := time.Since(start)
 	logger.GetLoggerFromCtx(ctx).Info("elapsed first model", zap.Duration("elapsed", elapsed))
-
+	time.Sleep(10 * time.Second)
 	start = time.Now()
 	for i := 0; i < 10; i++ {
 		wg.Add(1)

@@ -2,7 +2,7 @@ package converter
 
 func Convert(modelName string, probabilities []float64) string {
 	switch modelName {
-	case "sentiment-analysis":
+	case "russian-sentiment":
 		return ConvertFirstModel(probabilities)
 	case "emotion-detection":
 		return ConvertSecondModel(probabilities)
